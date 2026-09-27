@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>xRecital Schedule Options</title>
+  <style>
+  #sortable1, #sortable2, #sortable3, #sortable4 {
+    border: 4px solid #eee;
+    width: 142px;
+    min-height: 20px;
+    list-style-type: none;
+    margin: 0;
+    padding: 5px 0 0 0;
+    float: left;
+    margin-right: 10px;
+  }
+  #sortable1 li, #sortable2 li, #sortable3 li, #sortable4 li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1.2em;
+    background-color: #f0f0f0;
+    width: 120px;
+    position: relative; /* Add this line for absolute positioning */
+  }
+
+  #sortable1 li:hover::after,
+  #sortable2 li:hover::after,
+  #sortable3 li:hover::after,
+  #sortable4 li:hover::after {
+    content: attr(data-hover);
+    position: absolute;
+    background: #331616;
+    color: #c01919;
+    padding: 4px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    top: -15px;
+    left: 20px; /* Adjust the left property to shift the hover text to the right */
+  }
+
+  /* New style for hover effect */
+  .sortable-item:hover::after {
+    content: attr(data-hover);
+    position: absolute;
+    background: #331616;
+    color: #c01919;
+    padding: 4px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    top: -25px;
+    left: 0;
+  }
+
+  /* Background color classes */
+  .yellow {
+    background-color: yellow !important;
+  }
+
+  .blue {
+    background-color: rgb(195, 221, 230) !important;
+  }
+
+  .red {
+    background-color: rgb(236, 176, 176) !important;
+  }
+  </style>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+
+<script>
+$(document).ready(function() {
+  var values = [
+    { name: 'Hip Hop 1', songLength: 180, hoverValue: 'Hover Value 1' },
+    { name: 'Hip Hop 2', songLength: 210, hoverValue: 'Hover Value 2' },
+    { name: 'Hip Hop 3', songLength: 195, hoverValue: 'Hover Value 3' },
+    { name: 'Hip Hop 4', songLength: 220, hoverValue: 'Hover Value 4' },
+    { name: 'Ballet 1', songLength: 160, hoverValue: 'Hover Value 5' },
+    { name: 'Ballet 2', songLength: 185, hoverValue: 'Hover Value 6' },
+    { name: 'Ballet 3', songLength: 175, hoverValue: 'Hover Value 7' },
+    { name: 'Ballet 4a', songLength: 200, hoverValue: 'Hover Value 8' },
+    { name: 'Ballet 4b', songLength: 210, hoverValue: 'Hover Value 9' },
+    { name: 'Ballet 5', songLength: 190, hoverValue: 'Hover Value 10' }
+  ];
+
+  function formatTime(seconds) {
+    var hours = Math.floor(seconds / 3600);
+    var minutes = Math.floor((seconds % 3600) / 60);
+    var remainingSeconds = seconds % 60;
+
+    var formattedTime = '';
+    if (hours > 0) {
+      formattedTime += hours + ':';
+    }
+
+    if (minutes < 10) {
+      formattedTime += '0';
+    }
+    formattedTime += minutes + ':';
+
+    if (remainingSeconds < 10) {
+      formattedTime += '0';
+    }
+    formattedTime += remainingSeconds;
+
+    return formattedTime;
+  }
+
+  function sortListByName(selector) {
+    var items = $(selector + ' li').get();
+    items.sort(function(a, b) {
+      return $(a).text().trim().localeCompare($(b).text().trim());
+    });
+    $(selector).empty().append(items);
+  }
+
+  function ensureMasterListComplete() {
+    var masterList = $('#sortable1');
+    var seen = {};
+
+    masterList.find('li').each(function() {
+      seen[$(this).text().trim()] = true;
+    });
+
+    values.forEach(function(value) {
+      if (!seen[value.name]) {
+        var listItem = $('<li></li>').text(value.name).attr('data-hover', value.hoverValue);
+        masterList.append(listItem);
+        seen[value.name] = true;
+      }
+    });
+
+    sortListByName('#sortable1');
+  }
+
+  function getColorForName(itemName) {
+    var recitalNames = {};
+    var duplicateInRecital = false;
+
+    ['sortable2', 'sortable3', 'sortable4'].forEach(function(listId) {
+      var seenThisList = false;
+      var countInThisList = 0;
+
+      $('#' + listId + ' li').each(function() {
+        var currentName = $(this).text().trim();
+        if (currentName === itemName) {
+          countInThisList++;
+          seenThisList = true;
+        }
+      });
+
+      if (countInThisList > 1) {
+        duplicateInRecital = true;
+      }
+
+      if (seenThisList) {
+        recitalNames[itemName] = (recitalNames[itemName] || 0) + 1;
+      }
+    });
+
+    if (duplicateInRecital) {
+      return 'pink';
+    }
+
+    var recitalCount = recitalNames[itemName] || 0;
+    if (recitalCount === 0) {
+      return 'white';
+    }
+    if (recitalCount === 1) {
+      return 'lightgreen';
+    }
+    if (recitalCount === 2) {
+      return 'lightblue';
+    }
+    if (recitalCount >= 3) {
+      return '#4a6fa5';
+    }
+    return 'white';
+  }
+
+  function refreshColorsAndTotals() {
+    ensureMasterListComplete();
+    sortListByName('#sortable1');
+
+    $('#sortable1 li, #sortable2 li, #sortable3 li, #sortable4 li').each(function() {
+      var itemName = $(this).text().trim();
+      $(this).css('background-color', getColorForName(itemName));
+    });
+
+    var totals = {
+      sortable1: 0,
+      sortable2: 0,
+      sortable3: 0,
+      sortable4: 0
+    };
+
+    ['sortable1', 'sortable2', 'sortable3', 'sortable4'].forEach(function(listId) {
+      $('#' + listId + ' li').each(function() {
+        var itemName = $(this).text().trim();
+        var item = values.find(function(value) {
+          return value.name === itemName;
+        });
+
+        if (item) {
+          totals[listId] += item.songLength;
+        }
+      });
+
+      $('#' + listId + 'Total').text(formatTime(totals[listId]));
+    });
+  }
+
+  $('#sortable1, #sortable2, #sortable3, #sortable4').sortable({
+    connectWith: '.connectedSortable',
+    helper: 'clone',
+    receive: function(event, ui) {
+      var targetListId = this.id;
+      if (targetListId === 'sortable1') {
+        var itemName = ui.item.text().trim();
+        var existingItems = $('#sortable1 li').filter(function() {
+          return $(this).text().trim() === itemName && this !== ui.item[0];
+        });
+
+        if (existingItems.length > 0) {
+          ui.item.remove();
+          refreshColorsAndTotals();
+          return;
+        }
+      }
+
+      refreshColorsAndTotals();
+    },
+    update: function() {
+      refreshColorsAndTotals();
+    }
+  }).disableSelection();
+
+  function populateSortable1() {
+    $('#sortable1, #sortable2, #sortable3, #sortable4').empty();
+    values.forEach(function(value) {
+      $('#sortable1').append($('<li></li>').text(value.name).attr('data-hover', value.hoverValue));
+    });
+    refreshColorsAndTotals();
+  }
+
+  function getDisplaySuffix(itemName) {
+    var recitalColumns = ['sortable2', 'sortable3', 'sortable4'];
+    var recitalCount = 0;
+    var repeatedInSameRecital = false;
+
+    recitalColumns.forEach(function(listId) {
+      var foundInList = false;
+      $('#' + listId + ' li').each(function() {
+        if ($(this).text().trim() === itemName) {
+          foundInList = true;
+          if (repeatedInSameRecital) {
+            return;
+          }
+          var sameListCount = $('#' + listId + ' li').filter(function() {
+            return $(this).text().trim() === itemName;
+          }).length;
+          if (sameListCount > 1) {
+            repeatedInSameRecital = true;
+          }
+        }
+      });
+
+      if (foundInList) {
+        recitalCount++;
+      }
+    });
+
+    var suffix = '';
+    if (repeatedInSameRecital) {
+      suffix += '^';
+    }
+    if (recitalCount === 2) {
+      suffix += '*';
+    }
+    if (recitalCount >= 3) {
+      suffix += '**';
+    }
+    return suffix;
+  }
+
+  function renderDisplayTable() {
+    var displayTable = $('#displayTable');
+    displayTable.empty();
+
+    var table = $('<table border="1" cellpadding="6" cellspacing="0"></table>');
+    var headerRow = $('<tr></tr>');
+    headerRow.append($('<th>Recital 1</th>'));
+    headerRow.append($('<th>Recital 2</th>'));
+    headerRow.append($('<th>Recital 3</th>'));
+    table.append(headerRow);
+
+    var maxLength = Math.max(
+      $('#sortable2 li').length,
+      $('#sortable3 li').length,
+      $('#sortable4 li').length
+    );
+
+    for (var i = 0; i < maxLength; i++) {
+      var row = $('<tr></tr>');
+
+      var recital1Value = $('#sortable2 li').eq(i).text().trim();
+      var recital2Value = $('#sortable3 li').eq(i).text().trim();
+      var recital3Value = $('#sortable4 li').eq(i).text().trim();
+
+      row.append($('<td>' + (recital1Value ? recital1Value + getDisplaySuffix(recital1Value) : '') + '</td>'));
+      row.append($('<td>' + (recital2Value ? recital2Value + getDisplaySuffix(recital2Value) : '') + '</td>'));
+      row.append($('<td>' + (recital3Value ? recital3Value + getDisplaySuffix(recital3Value) : '') + '</td>'));
+      table.append(row);
+    }
+
+    displayTable.append(table);
+  }
+
+  populateSortable1();
+
+  $('#populateButton').click(function() {
+    populateSortable1();
+  });
+
+  $('#displayButton').click(function() {
+    renderDisplayTable();
+  });
+});
+
+</script>
+
+</head>
+
+<body>
+  <h1>xRecital Schedule Options</h1>
+
+  <button id="displayButton">Display</button>
+  <button id="populateButton">Reset all</button>
+  <br><br>
+
+  <div id="displayTable"></div>
+  <br><br>
+
+  <div style="display: flex; flex-direction: row;">
+    <div style="margin-right: 20px;">
+      <h2>Class List</h2>
+      <p>Length: <span id="sortable1Total"></span></p> 
+      <ul id="sortable1" class="connectedSortable">
+      </ul>
+    </div>
+  
+    <div style="margin-right: 20px;">
+      <h2>Recital 1</h2>
+      <p>Length: <span id="sortable2Total"></span></p>
+      <ul id="sortable2" class="connectedSortable">
+      </ul>
+    </div>
+  
+    <div style="margin-right: 20px;">
+      <h2>Recital 2</h2>
+      <p>Length: <span id="sortable3Total"></span></p>
+      <ul id="sortable3" class="connectedSortable">
+      </ul>
+    </div>
+  
+    <div>
+      <h2>Recital 3</h2>
+      <p>Length: <span id="sortable4Total"></span></p>
+      <ul id="sortable4" class="connectedSortable">
+      </ul>
+    </div>
+  </div>
+  
+
+  <br><br>
+
+</body>
+</html>

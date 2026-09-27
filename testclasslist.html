@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>xRecital Schedule Options</title>
+  <style>
+  #sortable1, #sortable2, #sortable3, #sortable4 {
+    border: 4px solid #eee;
+    width: 142px;
+    min-height: 20px;
+    list-style-type: none;
+    margin: 0;
+    padding: 5px 0 0 0;
+    float: left;
+    margin-right: 10px;
+  }
+  #sortable1 li, #sortable2 li, #sortable3 li, #sortable4 li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1.2em;
+    background-color: #f0f0f0;
+    width: 120px;
+    position: relative; /* Add this line for absolute positioning */
+  }
+
+  .class-song {
+    display: block;
+    font-size: 0.7em;
+    font-weight: normal;
+    line-height: 1.1;
+  }
+
+  #sortable1 li:hover::after,
+  #sortable2 li:hover::after,
+  #sortable3 li:hover::after,
+  #sortable4 li:hover::after {
+    content: attr(data-hover);
+    position: absolute;
+    background: #331616;
+    color: #c01919;
+    padding: 4px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    top: -15px;
+    left: 20px; /* Adjust the left property to shift the hover text to the right */
+  }
+
+  /* New style for hover effect */
+  .sortable-item:hover::after {
+    content: attr(data-hover);
+    position: absolute;
+    background: #331616;
+    color: #c01919;
+    padding: 4px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    top: -25px;
+    left: 0;
+  }
+
+  /* Background color classes */
+  .yellow {
+    background-color: yellow !important;
+  }
+
+  .blue {
+    background-color: rgb(195, 221, 230) !important;
+  }
+
+  .red {
+    background-color: rgb(236, 176, 176) !important;
+  }
+
+  .participation-detail {
+    position: relative;
+    cursor: help;
+  }
+
+  .participation-detail:hover::after {
+    content: attr(data-detail);
+    position: absolute;
+    z-index: 10;
+    left: 100%;
+    top: 100%;
+    min-width: 150px;
+    padding: 6px;
+    background: #331616;
+    color: white;
+    white-space: pre-line;
+    text-align: left;
+    font-weight: normal;
+  }
+
+  </style>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+
+<script>
+$(document).ready(function() {
+  var values = [
+    {
+      id: 'ballet-1',
+      name: 'ballet 1',
+      songName: 'mary poppins',
+      songLength: 75,
+      students: [
+        { name: 'john little', familyName: 'little' },
+        { name: 'marry little', familyName: 'little' },
+        { name: 'sam xde', familyName: 'xde' }
+      ],
+      hoverValue: 'Mia'
+    },
+    {
+      id: 'ballet-2',
+      name: 'ballet 2',
+      songName: 'hulu theme',
+      songLength: 136,
+      students: [
+        { name: 'mary', familyName: 'french' }
+      ],
+      hoverValue: 'Mia'
+    },
+    {
+      id: 'ballet-3',
+      name: 'ballet 3',
+      songName: 'martian song',
+      songLength: 180,
+      students: [
+        { name: 'sam xde', familyName: 'xde' }
+      ],
+      hoverValue: 'Kate k.'
+    },
+    {
+      id: 'ballet-4-pretty',
+      name: 'ballet 4',
+      songName: 'pretty song',
+      songLength: 135,
+      students: [
+        { name: 'anna', familyName: 'french' },
+        { name: 'tina', familyName: 'aaa' }
+      ],
+      hoverValue: 'Anna'
+    },
+    {
+      id: 'ballet-4-strong',
+      name: 'ballet 4',
+      songName: 'strong song',
+      songLength: 251,
+      students: [
+        { name: 'anna', familyName: 'french' },
+        { name: 'tina', familyName: 'aaa' }
+      ],
+      hoverValue: 'Anna'
+    }
+  ];
+
+  function formatTime(seconds) {
+    var hours = Math.floor(seconds / 3600);
+    var minutes = Math.floor((seconds % 3600) / 60);
+    var remainingSeconds = seconds % 60;
+
+    var formattedTime = '';
+    if (hours > 0) {
+      formattedTime += hours + ':';
+    }
+
+    if (minutes < 10) {
+      formattedTime += '0';
+    }
+    formattedTime += minutes + ':';
+
+    if (remainingSeconds < 10) {
+      formattedTime += '0';
+    }
+    formattedTime += remainingSeconds;
+
+    return formattedTime;
+  }
+
+  function sortListByName(selector) {
+    var items = $(selector + ' li').get();
+    items.sort(function(a, b) {
+      var first = getRecordForItem(a);
+      var second = getRecordForItem(b);
+      var classComparison = first.name.localeCompare(second.name);
+      return classComparison || first.songName.localeCompare(second.songName);
+    });
+    $(selector).empty().append(items);
+  }
+
+  function getRecordForItem(item) {
+    var recordId = $(item).attr('data-record-id');
+    return values.find(function(value) {
+      return value.id === recordId;
+    });
+  }
+
+  function hasMultipleSongs(className) {
+    return values.filter(function(value) {
+      return value.name === className;
+    }).length > 1;
+  }
+
+  function createListItem(value) {
+    var listItem = $('<li></li>')
+      .attr('data-record-id', value.id)
+      .attr('data-hover', value.hoverValue);
+    listItem.append($('<div></div>').text(value.name));
+    if (hasMultipleSongs(value.name)) {
+      listItem.append($('<small class="class-song"></small>').text(value.songName));
+    }
+    return listItem;
+  }
+
+  function getDisplayLabel(value) {
+    if (hasMultipleSongs(value.name)) {
+      return value.name + ' - ' + value.songName;
+    }
+    return value.name;
+  }
+
+  function ensureMasterListComplete() {
+    var masterList = $('#sortable1');
+    var seen = {};
+
+    masterList.find('li').each(function() {
+      seen[$(this).attr('data-record-id')] = true;
+    });
+
+    values.forEach(function(value) {
+      if (!seen[value.id]) {
+        masterList.append(createListItem(value));
+        seen[value.id] = true;
+      }
+    });
+
+    sortListByName('#sortable1');
+  }
+
+  function getColorForRecord(recordId) {
+    var recitalRecords = {};
+    var duplicateInRecital = false;
+
+    ['sortable2', 'sortable3', 'sortable4'].forEach(function(listId) {
+      var seenThisList = false;
+      var countInThisList = 0;
+
+      $('#' + listId + ' li').each(function() {
+        var currentRecordId = $(this).attr('data-record-id');
+        if (currentRecordId === recordId) {
+          countInThisList++;
+          seenThisList = true;
+        }
+      });
+
+      if (countInThisList > 1) {
+        duplicateInRecital = true;
+      }
+
+      if (seenThisList) {
+        recitalRecords[recordId] = (recitalRecords[recordId] || 0) + 1;
+      }
+    });
+
+    if (duplicateInRecital) {
+      return 'pink';
+    }
+
+    var recitalCount = recitalRecords[recordId] || 0;
+    if (recitalCount === 0) {
+      return 'white';
+    }
+    if (recitalCount === 1) {
+      return 'lightgreen';
+    }
+    if (recitalCount === 2) {
+      return 'lightblue';
+    }
+    if (recitalCount >= 3) {
+      return '#4a6fa5';
+    }
+    return 'white';
+  }
+
+  function refreshColorsAndTotals() {
+    ensureMasterListComplete();
+    sortListByName('#sortable1');
+
+    $('#sortable1 li, #sortable2 li, #sortable3 li, #sortable4 li').each(function() {
+      var recordId = $(this).attr('data-record-id');
+      $(this).css('background-color', getColorForRecord(recordId));
+    });
+
+    var totals = {
+      sortable1: 0,
+      sortable2: 0,
+      sortable3: 0,
+      sortable4: 0
+    };
+
+    ['sortable1', 'sortable2', 'sortable3', 'sortable4'].forEach(function(listId) {
+      $('#' + listId + ' li').each(function() {
+        var item = getRecordForItem(this);
+
+        if (item) {
+          totals[listId] += item.songLength;
+        }
+      });
+
+      $('#' + listId + 'Total').text(formatTime(totals[listId]));
+    });
+  }
+
+  $('#sortable1, #sortable2, #sortable3, #sortable4').sortable({
+    connectWith: '.connectedSortable',
+    helper: 'clone',
+    receive: function(event, ui) {
+      var targetListId = this.id;
+      if (targetListId === 'sortable1') {
+        var recordId = ui.item.attr('data-record-id');
+        var existingItems = $('#sortable1 li').filter(function() {
+          return $(this).attr('data-record-id') === recordId && this !== ui.item[0];
+        });
+
+        if (existingItems.length > 0) {
+          ui.item.remove();
+          refreshColorsAndTotals();
+          return;
+        }
+      }
+
+      refreshColorsAndTotals();
+    },
+    update: function() {
+      refreshColorsAndTotals();
+    }
+  }).disableSelection();
+
+  function populateSortable1() {
+    $('#sortable1, #sortable2, #sortable3, #sortable4').empty();
+    values.forEach(function(value) {
+      $('#sortable1').append(createListItem(value));
+    });
+    refreshColorsAndTotals();
+  }
+
+  function getDisplaySuffix(recordId) {
+    var recitalColumns = ['sortable2', 'sortable3', 'sortable4'];
+    var recitalCount = 0;
+    var repeatedInSameRecital = false;
+
+    recitalColumns.forEach(function(listId) {
+      var foundInList = false;
+      $('#' + listId + ' li').each(function() {
+        if ($(this).attr('data-record-id') === recordId) {
+          foundInList = true;
+          if (repeatedInSameRecital) {
+            return;
+          }
+          var sameListCount = $('#' + listId + ' li').filter(function() {
+            return $(this).attr('data-record-id') === recordId;
+          }).length;
+          if (sameListCount > 1) {
+            repeatedInSameRecital = true;
+          }
+        }
+      });
+
+      if (foundInList) {
+        recitalCount++;
+      }
+    });
+
+    var suffix = '';
+    if (repeatedInSameRecital) {
+      suffix += '^';
+    }
+    if (recitalCount === 2) {
+      suffix += '*';
+    }
+    if (recitalCount >= 3) {
+      suffix += '**';
+    }
+    return suffix;
+  }
+
+  function renderSummaryTable() {
+    var summaryTable = $('#summaryTable');
+    summaryTable.empty();
+
+    var table = $('<table border="1" cellpadding="6" cellspacing="0"></table>');
+    var nameRow = $('<tr></tr>');
+    var countRow = $('<tr><th>Class count</th></tr>');
+    var lengthRow = $('<tr><th>Length</th></tr>');
+    var studentRow = $('<tr><th>Student count</th></tr>');
+    var familyRow = $('<tr><th>Family count</th></tr>');
+
+    nameRow.append($('<th></th>'));
+
+    ['Recital 1', 'Recital 2', 'Recital 3'].forEach(function(label, index) {
+      var listId = ['sortable2', 'sortable3', 'sortable4'][index];
+      var count = $('#' + listId + ' li').length;
+      var total = 0;
+      var studentNames = {};
+      var familyNames = {};
+
+      $('#' + listId + ' li').each(function() {
+        var value = getRecordForItem(this);
+
+        if (value) {
+          total += value.songLength;
+          value.students.forEach(function(student) {
+            if (student.name) {
+              studentNames[student.name.trim().toLowerCase()] = true;
+            }
+            if (student.familyName) {
+              familyNames[student.familyName.trim().toLowerCase()] = true;
+            }
+          });
+        }
+      });
+
+      nameRow.append($('<th>' + label + '</th>'));
+      countRow.append($('<td>' + count + '</td>'));
+      lengthRow.append($('<td>' + formatTime(total) + '</td>'));
+      studentRow.append($('<td>' + Object.keys(studentNames).length + '</td>'));
+      familyRow.append($('<td>' + Object.keys(familyNames).length + '</td>'));
+    });
+
+    table.append(nameRow);
+    table.append(countRow);
+    table.append(lengthRow);
+    table.append(studentRow);
+    table.append(familyRow);
+    summaryTable.append(table);
+  }
+
+  function renderDisplayTable() {
+    var displayTable = $('#displayTable');
+    displayTable.empty();
+
+    var table = $('<table border="1" cellpadding="6" cellspacing="0"></table>');
+    var headerRow = $('<tr></tr>');
+    headerRow.append($('<th>Recital 1</th>'));
+    headerRow.append($('<th>Recital 2</th>'));
+    headerRow.append($('<th>Recital 3</th>'));
+    table.append(headerRow);
+
+    var maxLength = Math.max(
+      $('#sortable2 li').length,
+      $('#sortable3 li').length,
+      $('#sortable4 li').length
+    );
+
+    for (var i = 0; i < maxLength; i++) {
+      var row = $('<tr></tr>');
+
+      var recital1Item = $('#sortable2 li').eq(i);
+      var recital2Item = $('#sortable3 li').eq(i);
+      var recital3Item = $('#sortable4 li').eq(i);
+      var recital1Value = getRecordForItem(recital1Item);
+      var recital2Value = getRecordForItem(recital2Item);
+      var recital3Value = getRecordForItem(recital3Item);
+
+      row.append($('<td></td>').text(recital1Value ? getDisplayLabel(recital1Value) + getDisplaySuffix(recital1Value.id) : ''));
+      row.append($('<td></td>').text(recital2Value ? getDisplayLabel(recital2Value) + getDisplaySuffix(recital2Value.id) : ''));
+      row.append($('<td></td>').text(recital3Value ? getDisplayLabel(recital3Value) + getDisplaySuffix(recital3Value.id) : ''));
+      table.append(row);
+    }
+
+    displayTable.append(table);
+  }
+
+  function renderFamilyTable() {
+    var familyTable = $('#familyTable');
+    familyTable.empty();
+
+    var families = {};
+    values.forEach(function(value) {
+      value.students.forEach(function(student) {
+        var familyName = (student.familyName || '').trim();
+        if (!familyName) {
+          return;
+        }
+
+        var familyKey = familyName.toLowerCase();
+        if (!families[familyKey]) {
+          families[familyKey] = {
+            name: familyName,
+            recitals: [[], [], []]
+          };
+        }
+      });
+    });
+
+    ['sortable2', 'sortable3', 'sortable4'].forEach(function(listId, recitalIndex) {
+      $('#' + listId + ' li').each(function() {
+        var value = getRecordForItem(this);
+        if (!value) {
+          return;
+        }
+
+        value.students.forEach(function(student) {
+          var familyName = (student.familyName || '').trim();
+          var studentName = (student.name || '').trim();
+          if (!familyName || !studentName) {
+            return;
+          }
+
+          var family = families[familyName.toLowerCase()];
+          if (family && family.recitals[recitalIndex].indexOf(studentName) === -1) {
+            family.recitals[recitalIndex].push(studentName);
+          }
+        });
+      });
+    });
+
+    var table = $('<table border="1" cellpadding="6" cellspacing="0"></table>');
+    table.append($('<tr><th>Family</th><th>Recital count</th><th>Recital 1</th><th>Recital 2</th><th>Recital 3</th></tr>'));
+
+    Object.keys(families).sort(function(firstKey, secondKey) {
+      return families[firstKey].name.localeCompare(families[secondKey].name);
+    }).forEach(function(familyKey) {
+      var family = families[familyKey];
+      var recitalCount = family.recitals.filter(function(students) {
+        return students.length > 0;
+      }).length;
+      var row = $('<tr></tr>');
+      row.append($('<td></td>').text(family.name));
+      row.append($('<td></td>').text(recitalCount));
+      family.recitals.forEach(function(students) {
+        row.append($('<td></td>').text(students.join(', ')));
+      });
+      table.append(row);
+    });
+
+    familyTable.append($('<h2>Family participation</h2>'));
+    familyTable.append(table);
+  }
+
+  function renderHighLevelSummary() {
+    var summary = $('#highLevelSummary');
+    summary.empty();
+
+    var families = {};
+    var dancers = {};
+
+    ['sortable2', 'sortable3', 'sortable4'].forEach(function(listId, recitalIndex) {
+      $('#' + listId + ' li').each(function() {
+        var value = getRecordForItem(this);
+        if (!value) {
+          return;
+        }
+
+        value.students.forEach(function(student) {
+          var familyName = (student.familyName || '').trim();
+          var studentName = (student.name || '').trim();
+          if (!familyName || !studentName) {
+            return;
+          }
+
+          var familyKey = familyName.toLowerCase();
+          var dancerKey = familyKey + '|' + studentName.toLowerCase();
+          families[familyKey] = families[familyKey] || { name: familyName, recitals: {} };
+          dancers[dancerKey] = dancers[dancerKey] || {
+            name: studentName,
+            familyName: familyName,
+            recitals: {}
+          };
+          families[familyKey].recitals[recitalIndex] = true;
+          dancers[dancerKey].recitals[recitalIndex] = true;
+        });
+      });
+    });
+
+    var familiesByRecitalCount = [[], [], []];
+    Object.keys(families).forEach(function(familyKey) {
+      var recitalCount = Object.keys(families[familyKey].recitals).length;
+      if (recitalCount >= 1 && recitalCount <= 3) {
+        familiesByRecitalCount[recitalCount - 1].push(families[familyKey].name);
+      }
+    });
+
+    var dancersByRecitalCount = [[], [], []];
+    Object.keys(dancers).forEach(function(dancerKey) {
+      var recitalCount = Object.keys(dancers[dancerKey].recitals).length;
+      if (recitalCount >= 1 && recitalCount <= 3) {
+        dancersByRecitalCount[recitalCount - 1].push(
+          dancers[dancerKey].name + ' (' + dancers[dancerKey].familyName + ')'
+        );
+      }
+    });
+
+    familiesByRecitalCount.forEach(function(names) {
+      names.sort(function(firstName, secondName) {
+        return firstName.localeCompare(secondName);
+      });
+    });
+    dancersByRecitalCount.forEach(function(names) {
+      names.sort(function(firstName, secondName) {
+        return firstName.localeCompare(secondName);
+      });
+    });
+
+    function appendMetricRow(label, names, includeDetails) {
+      var row = $('<tr></tr>');
+      row.append($('<td></td>').text(label));
+      var countCell = $('<td></td>').text(names.length);
+      if (includeDetails && names.length > 0) {
+        countCell.addClass('participation-detail').attr('data-detail', names.join('\n'));
+      }
+      row.append(countCell);
+      table.append(row);
+    }
+
+    var table = $('<table border="1" cellpadding="6" cellspacing="0"></table>');
+    table.append($('<tr><th>Participation metric</th><th>Count</th></tr>'));
+    appendMetricRow('Families in 1 recital', familiesByRecitalCount[0], false);
+    appendMetricRow('Families in 2 recitals', familiesByRecitalCount[1], true);
+    appendMetricRow('Families in 3 recitals', familiesByRecitalCount[2], true);
+    appendMetricRow('Dancers in 1 recital', dancersByRecitalCount[0], false);
+    appendMetricRow('Dancers in 2 recitals', dancersByRecitalCount[1], true);
+    appendMetricRow('Dancers in 3 recitals', dancersByRecitalCount[2], true);
+    summary.append($('<h2>Participation overview</h2>'));
+    summary.append(table);
+  }
+
+  populateSortable1();
+
+  $('#populateButton').click(function() {
+    populateSortable1();
+  });
+
+  $('#displayButton').click(function() {
+    renderSummaryTable();
+    renderDisplayTable();
+    renderHighLevelSummary();
+    renderFamilyTable();
+  });
+});
+
+</script>
+
+</head>
+
+<body>
+  <h1>xRecital Schedule Options</h1>
+
+  <button id="displayButton">Display</button>
+  <button id="populateButton">Reset all</button>
+  <br><br>
+
+  <div style="display: flex; flex-direction: row; gap: 20px; align-items: flex-start;">
+    <div id="summaryTable"></div>
+    <div id="displayTable"></div>
+  </div>
+  <br><br>
+
+  <div id="highLevelSummary"></div>
+  <br><br>
+
+  <div style="display: flex; flex-direction: row;">
+    <div style="margin-right: 20px;">
+      <h2>Class List</h2>
+      <p>Length: <span id="sortable1Total"></span></p> 
+      <ul id="sortable1" class="connectedSortable">
+      </ul>
+    </div>
+  
+    <div style="margin-right: 20px;">
+      <h2>Recital 1</h2>
+      <p>Length: <span id="sortable2Total"></span></p>
+      <ul id="sortable2" class="connectedSortable">
+      </ul>
+    </div>
+  
+    <div style="margin-right: 20px;">
+      <h2>Recital 2</h2>
+      <p>Length: <span id="sortable3Total"></span></p>
+      <ul id="sortable3" class="connectedSortable">
+      </ul>
+    </div>
+  
+    <div>
+      <h2>Recital 3</h2>
+      <p>Length: <span id="sortable4Total"></span></p>
+      <ul id="sortable4" class="connectedSortable">
+      </ul>
+    </div>
+  </div>
+  
+  <div id="familyTable"></div>
+
+  <br><br>
+
+</body>
+</html>
